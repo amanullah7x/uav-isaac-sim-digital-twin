@@ -1,0 +1,4 @@
+numpy>=1.23.0
+pymavlink>=2.4.30
+pyzmq>=24.0.0
+opencv-python>=4.8.0

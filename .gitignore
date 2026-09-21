@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+devel/
+install/
+log/
+
+# ROS2 build artifacts
+colcon.meta
+*.log
+
+# USD / Isaac Sim cache
+*.usd.bak
+*.stage
+.omniverse/
+
+# Environments
+venv/
+.venv/
+
+# OS / IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

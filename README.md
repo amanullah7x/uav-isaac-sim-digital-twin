@@ -1,17 +1,18 @@
-# Autonomous UAV Digital Twin (PX4 + NVIDIA Isaac Sim + ROS2 Humble)
+# Autonomous Tracking in NVIDIA Isaac Sim (PX4 + ROS2 + PyQt6 GCS)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Simulation](https://img.shields.io/badge/Simulator-NVIDIA%20Isaac%20Sim%204.0%2B-green.svg)]()
 [![Autopilot](https://img.shields.io/badge/Autopilot-PX4%20Autopilot%20SITL-blue.svg)]()
 [![Middleware](https://img.shields.io/badge/Middleware-ROS2%20Humble-purple.svg)]()
+[![GCS](https://img.shields.io/badge/GCS-PyQt6-brightgreen.svg)]()
 
-> A high-fidelity software-in-the-loop (SITL) digital twin platform coupling **NVIDIA Isaac Sim** with **PX4 autopilot firmware** and offboard **ROS2 Humble** visual servoing nodes. Validates dynamic target-following logic, aerodynamic response, and vision pipelines in physics-accurate simulation with zero physical crash risk.
+> A complete software-in-the-loop (SITL) digital twin architecture running on Ubuntu to validate autonomous visual servoing and precision targeting before physical hardware deployment. Features a custom Python/PyQt6 Ground Control Station processing asynchronous video and telemetry feeds, an OpenCV tracking pipeline calculating real-time pixel offsets ($dx/dy$), and dynamic manual override via MAVLink into PX4 offboard control.
 
 ---
 
-## 📽️ Demo & Visual Output
+## 📽️ Demo & Simulation Recording
 
-Split-screen simulation-in-the-loop recording showing the **Kamikaze FPV Strike Controller** on the left and **NVIDIA Isaac Sim** quadcopter physics simulation on the right:
+Split-screen simulation recording demonstrating the **Kamikaze FPV Strike Controller** on the left with targeting crosshair and trajectory guidance, and **NVIDIA Isaac Sim** quadcopter physics simulation on the right:
 
 ![Isaac Sim SITL Demo](assets/demo.gif)
 
@@ -23,17 +24,18 @@ Split-screen simulation-in-the-loop recording showing the **Kamikaze FPV Strike 
 ┌─────────────────────────────────────────────────────────────┐
 │ NVIDIA Isaac Sim 4.0.1 (RTX Physics, Aerodynamics, Sensors) │
 └──────────────┬───────────────────────────────▲──────────────┘
-               │ (Synthetic 30 FPS Camera)     │ (Offboard Setpoint)
+               │ (Synthetic 30 FPS Video Feed) │ (Offboard Setpoint)
                ▼                               │
 ┌──────────────────────────────┐ ┌─────────────┴──────────────┐
-│ Perception Node (ROS2 YOLO)  │ │ PX4 Autopilot SITL         │
-│ - Target BBox Localization   │ │ - Full flight dynamics     │
+│ OpenCV Perception Pipeline   │ │ PX4 Autopilot SITL         │
+│ - Pixel Error Calc (dx/dy)   │ │ - Full flight dynamics     │
 └──────────────┬───────────────┘ └─────────────▲──────────────┘
                │                               │
-               ▼ (Target Offset Error)         │ (MAVLink Offboard)
+               ▼ (Velocity Vector Cmd)         │ (MAVLink Offboard Mode)
 ┌──────────────────────────────────────────────┴──────────────┐
-│ Visual Servoing PID Controller                              │
-│ - Body-frame velocity vector (Vx, Vy, Vz, YawRate)          │
+│ Custom PyQt6 Ground Control Station (GCS)                   │
+│ - Asynchronous video ingestion & HUD telemetry rendering    │
+│ - Manual Override / Autonomous Target Tracking Lock         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -41,13 +43,13 @@ Split-screen simulation-in-the-loop recording showing the **Kamikaze FPV Strike 
 
 ## ⚙️ Key Technical Challenges & Solutions
 
-### 1. High-Fidelity Pre-Flight Validation Without Hardware Risk
-* **Problem:** Testing visual servoing and aggressive flight control maneuvers on physical prototype drones carries high crash risks and damages expensive companion computers.
-* **Solution:** Replicated the quadcopter aerodynamics, camera sensor intrinsics/extrinsics, and lighting environments inside NVIDIA Isaac Sim. All perception algorithms run against synthetic RTX camera streams, closing the loop with PX4 SITL over bi-directional MAVLink bridges.
+### 1. Zero Hardware Risk Pre-Flight Validation
+* **Problem:** Direct field testing of aggressive visual servoing maneuvers on prototype quadcopters carries high crash risks and damages expensive companion computers and camera sensors.
+* **Solution:** Replicated quadcopter aerodynamics, camera sensor parameters, and dynamic ground targets in NVIDIA Isaac Sim. Perception algorithms calculate pixel offsets ($dx/dy$) against synthetic RTX camera streams, closing the loop with PX4 SITL over bi-directional MAVLink bridges.
 
-### 2. Synchronization & Telemetry Lag
-* **Problem:** Time synchronization drift between the physics simulation clock and the ROS2 offboard control nodes caused PID derivative spikes.
-* **Solution:** Locked the simulation step to a deterministic 200 Hz physics rate while publishing synthetic sensor frames at 30 Hz with hardware timestamps (`sensor_msgs/Image`), stabilizing PID visual servoing without oscillations.
+### 2. Low-Latency Asynchronous Telemetry & Video Processing
+* **Problem:** Streaming video and high-rate MAVLink state data simultaneously into the GCS interface caused severe event loop locking and control lag.
+* **Solution:** Architected dedicated background threads in PyQt6 to ingest video and telemetry asynchronously. When a target is acquired, the OpenCV tracking pipeline overrides manual operator input and transmits direct velocity setpoints to the flight controller at 20 Hz.
 
 ---
 
@@ -55,6 +57,7 @@ Split-screen simulation-in-the-loop recording showing the **Kamikaze FPV Strike 
 * **Simulation:** NVIDIA Isaac Sim 4.0+ (Omniverse)
 * **Autopilot Stack:** PX4 Autopilot (v1.14+), MicroXRCE-DDS Agent
 * **Middleware:** ROS2 Humble Hawksbill
+* **Ground Station:** PyQt6, Python 3.10+
 * **Communications:** MAVLink, pymavlink, pyzmq
 
 ---
@@ -73,7 +76,7 @@ pip install -r requirements.txt
 python ros2_offboard_tracker.py --duration 5.0
 ```
 
-### 3. Launch with PX4 SITL and Isaac Sim
+### 3. Launch Complete SITL Pipeline
 ```bash
 # Terminal 1: Launch PX4 SITL
 make px4_sitl none_iris
@@ -81,6 +84,6 @@ make px4_sitl none_iris
 # Terminal 2: Start micro-ROS agent
 MicroXRCEAgent udp4 -p 8888
 
-# Terminal 3: Run offboard tracking node
+# Terminal 3: Run offboard visual servoing node
 python ros2_offboard_tracker.py
 ```

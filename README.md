@@ -12,7 +12,7 @@
 
 ## 📽️ Demo & Simulation Recording
 
-Split-screen simulation recording demonstrating the **Kamikaze FPV Strike Controller** on the left with targeting crosshair and trajectory guidance, and **NVIDIA Isaac Sim** quadcopter physics simulation on the right:
+Split-screen simulation recording demonstrating the **Autonomous Aerial Tracking & Visual Servoing GCS** on the left with targeting crosshair and trajectory guidance, and **NVIDIA Isaac Sim** quadcopter physics simulation on the right:
 
 ![Isaac Sim SITL Demo](assets/demo.gif)
 

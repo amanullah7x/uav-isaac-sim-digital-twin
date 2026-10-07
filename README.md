@@ -6,13 +6,13 @@
 [![Middleware](https://img.shields.io/badge/Middleware-ROS2%20Humble-purple.svg)]()
 [![GCS](https://img.shields.io/badge/GCS-PyQt6-brightgreen.svg)]()
 
-> A complete software-in-the-loop (SITL) digital twin architecture running on Ubuntu to validate autonomous visual servoing and precision targeting before physical hardware deployment. Features a custom Python/PyQt6 Ground Control Station processing asynchronous video and telemetry feeds, an OpenCV tracking pipeline calculating real-time pixel offsets ($dx/dy$), and dynamic manual override via MAVLink into PX4 offboard control.
+> A complete software-in-the-loop (SITL) digital twin architecture running on Ubuntu to validate autonomous visual servoing and precision tracking before physical hardware deployment. Features a custom Python/PyQt6 Ground Control Station processing asynchronous video and telemetry feeds, an OpenCV tracking pipeline calculating real-time pixel offsets ($dx/dy$), and dynamic manual override via MAVLink into PX4 offboard control.
 
 ---
 
 ## 📽️ Demo & Simulation Recording
 
-Split-screen simulation recording demonstrating the **Autonomous Aerial Tracking & Visual Servoing GCS** on the left with targeting crosshair and trajectory guidance, and **NVIDIA Isaac Sim** quadcopter physics simulation on the right:
+Split-screen simulation recording demonstrating the **Autonomous Aerial Tracking & Visual Servoing GCS** on the left with tracking crosshair and trajectory guidance, and **NVIDIA Isaac Sim** quadcopter physics simulation on the right:
 
 ![Isaac Sim SITL Demo](assets/demo.gif)
 
@@ -35,7 +35,7 @@ Split-screen simulation recording demonstrating the **Autonomous Aerial Tracking
 ┌──────────────────────────────────────────────┴──────────────┐
 │ Custom PyQt6 Ground Control Station (GCS)                   │
 │ - Asynchronous video ingestion & HUD telemetry rendering    │
-│ - Manual Override / Autonomous Target Tracking Lock         │
+│ - Manual Override / Autonomous Tracking Lock         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -45,11 +45,11 @@ Split-screen simulation recording demonstrating the **Autonomous Aerial Tracking
 
 ### 1. Zero Hardware Risk Pre-Flight Validation
 * **Problem:** Direct field testing of aggressive visual servoing maneuvers on prototype quadcopters carries high crash risks and damages expensive companion computers and camera sensors.
-* **Solution:** Replicated quadcopter aerodynamics, camera sensor parameters, and dynamic ground targets in NVIDIA Isaac Sim. Perception algorithms calculate pixel offsets ($dx/dy$) against synthetic RTX camera streams, closing the loop with PX4 SITL over bi-directional MAVLink bridges.
+* **Solution:** Replicated quadcopter aerodynamics, camera sensor parameters, and moving subjects in NVIDIA Isaac Sim. Perception algorithms calculate pixel offsets ($dx/dy$) against synthetic RTX camera streams, closing the loop with PX4 SITL over bi-directional MAVLink bridges.
 
 ### 2. Low-Latency Asynchronous Telemetry & Video Processing
 * **Problem:** Streaming video and high-rate MAVLink state data simultaneously into the GCS interface caused severe event loop locking and control lag.
-* **Solution:** Architected dedicated background threads in PyQt6 to ingest video and telemetry asynchronously. When a target is acquired, the OpenCV tracking pipeline overrides manual operator input and transmits direct velocity setpoints to the flight controller at 20 Hz.
+* **Solution:** Architected dedicated background threads in PyQt6 to ingest video and telemetry asynchronously. When a subject is acquired, the OpenCV tracking pipeline overrides manual operator input and transmits direct velocity setpoints to the flight controller at 20 Hz.
 
 ---
 
